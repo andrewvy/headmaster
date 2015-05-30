@@ -3,6 +3,23 @@
   "version": "1.0.0",
   "description": "Assassin game for Slack using the Real-Time Message Protocol",
   "main": "index.js",
+  "dependencies": {
+    "slack-client": "",
+    "q": ""
+  },
+  "devDependencies": {
+    "mocha": "",
+    "chai": "",
+    "chai-string": "",
+    "sinon": "",
+    "jshint": "",
+    "supertest": ""
+  },
+  "scripts": {
+    "test": "./node_modules/mocha/bin/mocha --timeout=10s",
+    "lint": "./node_modules/jshint/bin/jshint lib tests -c .jshint",
+    "start": "node index.js"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
