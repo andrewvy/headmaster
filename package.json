@@ -1,0 +1,22 @@
+{
+  "name": "assassin-slack",
+  "version": "1.0.0",
+  "description": "Assassin game for Slack using the Real-Time Message Protocol",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andrewvy/assassin-slack.git"
+  },
+  "keywords": [
+    "assassin"
+  ],
+  "author": "Andrew Vy",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/andrewvy/assassin-slack/issues"
+  },
+  "homepage": "https://github.com/andrewvy/assassin-slack#readme"
+}
