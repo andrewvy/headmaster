@@ -12,7 +12,7 @@ var Assassin = function(options) {
 	this.slack_token = options.slack_token;
 
 	// Connect to DB
-	mongoose.connect(this.mongoUri);
+	// mongoose.connect(this.mongoUri);
 
 	// Connect to Slack and setup listeners
 	this.slack = new Slack(this.slack_token, true, true);
@@ -37,6 +37,8 @@ Assassin.prototype.startListeners = function() {
 		console.log(message);
 		_this.handleMessage(message);
 	});
+
+	this.slack.login();
 }
 
 Assassin.prototype.handleOpen = function() {
@@ -45,6 +47,16 @@ Assassin.prototype.handleOpen = function() {
 
 Assassin.prototype.handleMessage = function(message) {
 	// Any logic to handle when a message comes in
+
+	var dmChannel = this.slack.getDMByID(message.channel);
+	var username = this.slack.users[message.user].name;
+
+	if (dmChannel) {
+		dmChannel.send("Hello " + username + "!");
+	}
+}
+
+Assassin.prototype.dispatchMessageHandler = function(text) {
 }
 
 Assassin.prototype.startCron = function() {
