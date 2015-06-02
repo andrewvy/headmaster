@@ -42,14 +42,18 @@ Assassin.prototype.startListeners = function() {
 }
 
 Assassin.prototype.handleOpen = function() {
+
 	// Any logic to handle when first connecting to slack
+
+
 }
 
 Assassin.prototype.handleMessage = function(message) {
+
 	// Any logic to handle when a message comes in
 
 	var dmChannel = this.slack.getDMByID(message.channel);
-	var username = this.slack.users[message.user].name;
+	var username = this.slack.getUserByID(message.user).name;
 
 	if (dmChannel) {
 		dmChannel.send("Hello " + username + "!");
