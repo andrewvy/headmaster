@@ -11,6 +11,10 @@ var Assassin = function(options) {
 
 	this.mongo_uri = process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || options.mongo_uri || "mongodb://localhost/pingpong";
 	this.slack_token = options.slack_token;
+	this.slack_channel = options.slack_channel || "assassin-game";
+
+	// Would check if configuration file was created, if not, start from scratch.
+	this.first_boot = true;
 
 	this._nextUserDMHandlers = []
 
@@ -20,12 +24,9 @@ var Assassin = function(options) {
 	// Connect to DB
 	// mongoose.connect(this.mongoUri);
 
-	// Connect to Slack and setup listeners
+	// Connect to Slack, setup listeners, and join channel
 	this.slack = new Slack(this.slack_token, true, true);
 	this.startListeners();
-
-	// Retrieve game-related data from DB
-	this.players = this.getPlayers();
 
 	// Initialize CRON
 	this.startCron();
@@ -47,9 +48,37 @@ Assassin.prototype.startListeners = function() {
 }
 
 Assassin.prototype.handleOpen = function() {
-
 	// Any logic to handle when first connecting to slack
+	// Joins the assassin-game slack channel
 
+	if (this.checkForChannel()) {
+		// this.getPlayers()
+	} else {
+		console.error("Please create and invite the bot to the slack channel: #" + this.slack_channel);
+		this.shutdown();
+	}
+}
+
+Assassin.prototype.checkForChannel = function() {
+	var _this = this;
+	var is_member_channels = [];
+	var has_channel = false;
+
+	Object.keys(this.slack.channels).forEach(function(key) {
+		if (_this.slack.channels[key].is_member == true) {
+			is_member_channels.push(_this.slack.channels[key]);
+
+			if (_this.slack.channels[key].name == _this.slack_channel) {
+				has_channel = true;
+			}
+		}
+	});
+
+	return has_channel;
+}
+
+Assassin.prototype.shutdown = function() {
+	this.slack.disconnect();
 }
 
 Assassin.prototype.handleMessage = function(message) {
@@ -89,6 +118,8 @@ Assassin.prototype.startCron = function() {
 
 Assassin.prototype.getPlayers = function() {
 	// Get currently active players from DB
+
+	this.players = [];
 }
 
 Assassin.prototype.setNextUserDMHandler = function(user, cb) {
