@@ -3,34 +3,49 @@
 var Slack = require("slack-client");
 var Commands = require("./commands");
 var mongoose = require("mongoose");
+var promfig = require("promfig");
+var configurate = require("configurate");
 
-var Assassin = function(options) {
-	if (!options.slack_token) {
-		console.error("No slack_token specified in options.");
-	}
+var Assassin = function() {
+	var _this = this;
 
-	this.mongo_uri = process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || options.mongo_uri || "mongodb://localhost/pingpong";
-	this.slack_token = options.slack_token;
-	this.slack_channel = options.slack_channel || "assassin-game";
+	var configFile = "config.js";
 
-	// Would check if configuration file was created, if not, start from scratch.
-	this.first_boot = true;
+	var properties = {
+		slack_token: "Please enter your Slack Bot API Token: ",
+		slack_channel: "Please enter the name of the slack channel: "
+	};
 
-	this._nextUserDMHandlers = []
+	var edit = promfig.bind(null, properties);
 
-	// Setup Commands
-	this.commands = new Commands(this);
+	configurate({
+		configFile: configFile,
+		edit: edit
+	}, function (err, config, configPath) {
+		console.log(configPath);
+		if (!config.slack_token) {
+			console.error("No slack_token specified in options.");
+		}
 
-	// Connect to DB
-	// mongoose.connect(this.mongoUri);
+		_this.mongo_uri = process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || "mongodb://localhost/assassin-slack";
+		_this.slack_token = config.slack_token;
+		_this.slack_channel = config.slack_channel || "assassin-game";
 
-	// Connect to Slack, setup listeners, and join channel
-	this.slack = new Slack(this.slack_token, true, true);
-	this.startListeners();
+		_this._nextUserDMHandlers = []
 
-	// Initialize CRON
-	this.startCron();
+		// Setup Commands
+		_this.commands = new Commands(_this);
 
+		// Connect to DB
+		// mongoose.connect(this.mongoUri);
+
+		// Connect to Slack, setup listeners, and join channel
+		_this.slack = new Slack(_this.slack_token, true, true);
+		_this.startListeners();
+
+		// Initialize CRON
+		_this.startCron();
+	});
 }
 
 Assassin.prototype.startListeners = function() {

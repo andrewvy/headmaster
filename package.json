@@ -5,7 +5,9 @@
   "main": "index.js",
   "dependencies": {
     "slack-client": "",
-    "q": ""
+    "q": "",
+    "configurate": "",
+    "promfig": ""
   },
   "scripts": {
     "start": "node index.js"
