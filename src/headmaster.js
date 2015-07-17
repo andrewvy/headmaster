@@ -265,7 +265,7 @@ Headmaster.prototype.sendBlockingIssues = function(channel) {
 			if (data.length == 0) {
 				channel.send("Looks like there are currently no open GitHub issues labeled as 'blocker'.");
 			} else {
-				channel.send("Hey guys! Here are the current GitHub issues labeled as 'blocker'!");
+				channel.send("Here are the current GitHub issues labeled as 'blocker'!");
 				data.forEach(function(issue){
 					channel.send(_this.formatIssue(issue));
 				});
