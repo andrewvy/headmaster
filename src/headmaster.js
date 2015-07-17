@@ -14,7 +14,7 @@ var Headmaster = function() {
 
 	var properties = {
 		slack_token: "Please enter your Slack Bot API Token: ",
-		slack_channel: "Please enter the name of the slack channel: ",
+		slack_group: "Please enter the name of the slack group: ",
 		github_username: "Please enter your GitHub username: ",
 		github_api_token: "Please enter your GitHub Personal Access Token: ",
 		github_organization_name: "Please enter in your main GitHub organization name: ",
@@ -38,7 +38,7 @@ var Headmaster = function() {
 		_this.mongoUri = process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || "mongodb://localhost/headmaster";
 		_this.slack_token = config.slack_token;
 		_this.channel = null;
-		_this.slack_channel = config.slack_channel;
+		_this.slack_group = config.slack_group;
 
 		_this._nextUserDMHandlers = []
 
@@ -86,12 +86,12 @@ Headmaster.prototype.handleOpen = function() {
 
 	// Any logic to handle when first connecting to slack
 
-	this.channel = this.getChannel();
+	this.channel = this.getGroup();
 
 	if (this.channel) {
 		this.sendBlockingIssues();
 	} else {
-		console.error("Please create and invite the bot to the slack channel: #" + this.slack_channel);
+		console.error("Please create and invite the bot to the slack channel: #" + this.slack_group);
 		this.shutdown();
 	}
 }
@@ -112,6 +112,20 @@ Headmaster.prototype.getChannel = function() {
 	});
 
 	return channel;
+}
+
+Headmaster.prototype.getGroup = function() {
+	var _this = this;
+	var is_member_groups = [];
+	var group = null;
+
+	Object.keys(this.slack.groups).forEach(function(key) {
+		if (_this.slack.groups[key].name == _this.slack_group) {
+			group = _this.slack.groups[key];
+		}
+	});
+
+	return group;
 }
 
 Headmaster.prototype.shutdown = function() {
