@@ -108,8 +108,6 @@ Headmaster.prototype.startListeners = function() {
 Headmaster.prototype.handleOpen = function() {
 	var _this = this;
 
-	console.log("unread messages: ", this.slack.getUnreadCount());
-
 	// Any logic to handle when first connecting to slack
 
 	this.channel = this.getChannel() || this.getGroup();
@@ -167,7 +165,8 @@ Headmaster.prototype.handleMessage = function(message) {
 			this.modules.nlp.getMessageIntent(message.text).then(function(intent) {
 				_this.routeMessage(dmChannel, user, message.text, intent);
 			}).fail(function() {
-				var text = message.text.split(' ').slice(1,query.length).join(' ');
+				var text_array = message.text.split(' ');
+				var text = text_array.slice(1,text_array.length).join(' ');
 				_this.routeMessage(dmChannel, user, text);
 			});
 		} else if (message.text.split(" ")[0].toLowerCase() == "headmaster") {
@@ -175,7 +174,8 @@ Headmaster.prototype.handleMessage = function(message) {
 			this.modules.nlp.getMessageIntent(message.text).then(function(intent) {
 				_this.routeMessage(dmChannel, user, message.text, intent);
 			}).fail(function() {
-				var text = message.text.split(' ').slice(1,query.length).join(' ');
+				var text_array = message.text.split(' ');
+				var text = text_array.slice(1,text_array.length).join(' ');
 				_this.routeMessage(dmChannel, user, text);
 			});
 		}
@@ -193,6 +193,7 @@ Headmaster.prototype.routeMessage = function(dmChannel, user, message, intent) {
 	} else {
 		var triggerWord = intent || message.split(" ")[0].toLowerCase();
 
+		console.log(triggerWord);
 		if (this.commands[triggerWord]) {
 			this.commands[triggerWord](dmChannel, user, message);
 		} else {
