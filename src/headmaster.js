@@ -89,7 +89,6 @@ Headmaster.prototype.handleOpen = function() {
 	this.channel = this.getGroup();
 
 	if (this.channel) {
-		this.sendBlockingIssues();
 	} else {
 		console.error("Please create and invite the bot to the slack channel: #" + this.slack_group);
 		this.shutdown();
@@ -234,7 +233,7 @@ Headmaster.prototype.getBlockingIssues = function() {
 	return deferred.promise;
 }
 
-Headmaster.prototpge.getUnassignedVQAIssues = function() {
+Headmaster.prototype.getUnassignedVQAIssues = function() {
 	var deferred = Q.defer();
 
 	this.github_issues.list({
@@ -268,7 +267,7 @@ Headmaster.prototype.sendBlockingIssues = function(channel) {
 			} else {
 				channel.send("Hey guys! Here are the current GitHub issues labeled as 'blocker'!");
 				data.forEach(function(issue){
-					_this.channel.send(_this.formatIssue(issue));
+					channel.send(_this.formatIssue(issue));
 				});
 			}
 		})
