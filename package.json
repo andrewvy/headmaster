@@ -5,10 +5,10 @@
   "main": "index.js",
   "dependencies": {
     "configurate": "",
-    "github": "^0.2.4",
+    "github-api": "^0.10.6",
     "node-schedule": "^0.2.9",
     "promfig": "",
-    "q": "",
+    "q": "^1.4.1",
     "slack-client": ""
   },
   "scripts": {

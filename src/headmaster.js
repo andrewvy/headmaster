@@ -6,21 +6,26 @@ var mongoose = require("mongoose");
 var promfig = require("promfig");
 var configurate = require("configurate");
 var schedule = require('node-schedule');
+var Github = require('github-api');
+var Q = require('q');
 
 var Headmaster = function() {
 	var _this = this;
 
-	var configFile = __dirname + "/config.js";
-
 	var properties = {
 		slack_token: "Please enter your Slack Bot API Token: ",
-		slack_channel: "Please enter the name of the slack channel: "
+		slack_channel: "Please enter the name of the slack channel: ",
+		github_username: "Please enter your GitHub username: ",
+		github_api_token: "Please enter your GitHub Personal Access Token: ",
+		github_organization_name: "Please enter in your main GitHub organization name: ",
+		github_repo: "Please enter in your main GitHub repo name: "
 	};
 
 	var edit = promfig.bind(null, properties);
 
 	configurate({
-		configFile: configFile,
+		configFile: 'config.js',
+		configDir: __dirname,
 		edit: edit
 	}, function (err, config, configPath) {
 
@@ -30,9 +35,10 @@ var Headmaster = function() {
 			console.error("No slack_token specified in options.");
 		}
 
-		_this.mongo_uri = process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || "mongodb://localhost/headmaster";
+		_this.mongoUri = process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || "mongodb://localhost/headmaster";
 		_this.slack_token = config.slack_token;
 		_this.channel = null;
+		_this.slack_channel = config.slack_channel;
 
 		_this._nextUserDMHandlers = []
 
@@ -44,6 +50,16 @@ var Headmaster = function() {
 
 		// Connect to Slack, setup listeners, and join channel
 		_this.slack = new Slack(_this.slack_token, true, true);
+
+		// Connect to GitHub, setup authorization
+		_this.github = new Github({
+			token: config.github_api_token,
+			auth: "oauth"
+		});
+
+		_this.github_repo = _this.github.getRepo(config.github_organization_name, config.github_repo);
+		_this.github_issues = _this.github.getIssues(config.github_organization_name, config.github_repo);
+
 		_this.startListeners();
 
 		// Initialize CRON
@@ -73,7 +89,7 @@ Headmaster.prototype.handleOpen = function() {
 	this.channel = this.getChannel();
 
 	if (this.channel) {
-		this.channel.send("I am the headmaster.");
+		this.sendBlockingIssues();
 	} else {
 		console.error("Please create and invite the bot to the slack channel: #" + this.slack_channel);
 		this.shutdown();
@@ -184,9 +200,48 @@ Headmaster.prototype.getUsers = function(channel) {
 	return members;
 }
 
-Headmaster.prototype.startCron = function() {
-	var blockingTickets = schedule.scheduleJob('0 8,12,16,20,24 0 0 0', function() {
+Headmaster.prototype.getBlockingIssues = function() {
+	var deferred = Q.defer();
 
+	this.github_issues.list({
+		labels: "blocker"
+	}, function(err, data) {
+		if (err) {
+			deferred.reject(err);
+		} else {
+			deferred.resolve(data);
+		}
+	});
+
+	return deferred.promise;
+}
+
+Headmaster.prototype.formatIssue = function(issue) {
+	var name = "*" + issue['title'] + "* ";
+	var assigned_to = "[" + issue['assignee']['login'] + "] ";
+	var url = issue['html_url'];
+
+	return name + assigned_to + url;
+}
+
+Headmaster.prototype.sendBlockingIssues = function() {
+	var _this = this;
+	this.getBlockingIssues()
+		.then(function(data) {
+			_this.channel.send("Hey guys! Here are the current GitHub issues labeled as 'blocker'!");
+			data.forEach(function(issue){
+				_this.channel.send(_this.formatIssue(issue));
+			});
+		})
+		.fail(function(err) {
+			console.error(err);
+		});
+}
+
+Headmaster.prototype.startCron = function() {
+	var _this = this;
+	var blockingTickets = schedule.scheduleJob('0 8,12,16,20,24 0 0 0', function() {
+		_this.sendBlockingIssues();
 	});
 }
 
