@@ -214,6 +214,10 @@ Headmaster.prototype.getUsers = function(channel) {
 	return members;
 }
 
+// --------------
+// GitHub Issues
+// --------------
+
 Headmaster.prototype.getBlockingIssues = function() {
 	var deferred = Q.defer();
 
@@ -230,32 +234,57 @@ Headmaster.prototype.getBlockingIssues = function() {
 	return deferred.promise;
 }
 
-Headmaster.prototype.formatIssue = function(issue) {
-	var name = "*" + issue['title'] + "* ";
-	var assigned_to = "[" + issue['assignee']['login'] + "] ";
-	var url = issue['html_url'];
+Headmaster.prototpge.getUnassignedVQAIssues = function() {
+	var deferred = Q.defer();
 
-	return name + assigned_to + url;
+	this.github_issues.list({
+		milestone: "VQA: Moment View",
+		assignee: "none",
+	}, function(err, data) {
+		if (err) {
+			deferred.reject(err);
+		} else {
+			deferred.resolve(data);
+		}
+	});
+
+	return deferred.promise;
 }
 
-Headmaster.prototype.sendBlockingIssues = function() {
+Headmaster.prototype.formatIssue = function(issue) {
+	var assigned_to = "[" + issue['assignee']['login'] + "] ";
+	var name = "*" + issue['title'] + "* ";
+	var url = issue['html_url'];
+
+	return assigned_to + name + url;
+}
+
+Headmaster.prototype.sendBlockingIssues = function(channel) {
 	var _this = this;
 	this.getBlockingIssues()
 		.then(function(data) {
-			_this.channel.send("Hey guys! Here are the current GitHub issues labeled as 'blocker'!");
-			data.forEach(function(issue){
-				_this.channel.send(_this.formatIssue(issue));
-			});
+			if (data.length == 0) {
+				channel.send("Looks like there are currently no open GitHub issues labeled as 'blocker'.");
+			} else {
+				channel.send("Hey guys! Here are the current GitHub issues labeled as 'blocker'!");
+				data.forEach(function(issue){
+					_this.channel.send(_this.formatIssue(issue));
+				});
+			}
 		})
 		.fail(function(err) {
 			console.error(err);
 		});
 }
 
+// -------------
+// Cron
+// -------------
+
 Headmaster.prototype.startCron = function() {
 	var _this = this;
 	var blockingTickets = schedule.scheduleJob('0 8,12,16,20,24 0 0 0', function() {
-		_this.sendBlockingIssues();
+		_this.sendBlockingIssues(_this.channel);
 	});
 }
 
