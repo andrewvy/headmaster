@@ -1,13 +1,17 @@
 'use strict';
 
+// Dependencies
 var Slack = require("slack-client");
-var Commands = require("./commands");
 var mongoose = require("mongoose");
 var promfig = require("promfig");
 var configurate = require("configurate");
 var schedule = require('node-schedule');
 var Github = require('github-api');
 var Q = require('q');
+
+// Modules
+var Commands = require("./commands");
+var GithubModule = require("./modules/github");
 
 var Headmaster = function() {
 	var _this = this;
@@ -28,43 +32,59 @@ var Headmaster = function() {
 		configDir: __dirname,
 		edit: edit
 	}, function (err, config, configPath) {
-
-		console.log("Loading configuration file found at: " + configPath);
-
-		if (!config.slack_token) {
-			console.error("No slack_token specified in options.");
+		if (err) {
+			return;
+		} else {
+			_this.initialize(config, configPath);
 		}
 
-		_this.mongoUri = process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || "mongodb://localhost/headmaster";
-		_this.slack_token = config.slack_token;
-		_this.channel = null;
-		_this.slack_group = config.slack_group;
-
-		_this._nextUserDMHandlers = []
-
-		// Setup Commands
-		_this.commands = new Commands(_this);
-
-		// Connect to DB
-		mongoose.connect(_this.mongoUri);
-
-		// Connect to Slack, setup listeners, and join channel
-		_this.slack = new Slack(_this.slack_token, true, true);
-
-		// Connect to GitHub, setup authorization
-		_this.github = new Github({
-			token: config.github_api_token,
-			auth: "oauth"
-		});
-
-		_this.github_repo = _this.github.getRepo(config.github_organization_name, config.github_repo);
-		_this.github_issues = _this.github.getIssues(config.github_organization_name, config.github_repo);
-
-		_this.startListeners();
-
-		// Initialize CRON
-		_this.startCron();
 	});
+}
+
+Headmaster.prototype.initialize = function(config, configPath) {
+	console.log("Loading configuration file found at: " + configPath);
+
+	if (!config.slack_token) {
+		console.error("No slack_token specified in options.");
+	}
+
+	this.mongoUri = process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || "mongodb://localhost/headmaster";
+	this.slack_token = config.slack_token;
+	this.channel = null;
+	this.slack_group = config.slack_group;
+
+	this._nextUserDMHandlers = []
+
+	// Setup Commands
+	this.commands = new Commands(this);
+
+	// Connect to DB
+	mongoose.connect(this.mongoUri);
+
+	// Connect to Slack, setup listeners, and join channel
+	this.slack = new Slack(this.slack_token, true, true);
+
+	// Connect to GitHub, setup authorization
+	this.github_client = new Github({
+		token: config.github_api_token,
+		auth: "oauth"
+	});
+
+	this.github_repo = this.github_client.getRepo(config.github_organization_name, config.github_repo);
+	this.github_issues = this.github_client.getIssues(config.github_organization_name, config.github_repo);
+
+	// Initialize Modules
+	this.modules = {};
+	this.startModules();
+
+	this.startListeners();
+
+	// Initialize CRON
+	this.startCron();
+}
+
+Headmaster.prototype.startModules = function() {
+	this.modules.github = new GithubModule(this);
 }
 
 Headmaster.prototype.startListeners = function() {
@@ -127,10 +147,6 @@ Headmaster.prototype.getGroup = function() {
 	return group;
 }
 
-Headmaster.prototype.shutdown = function() {
-	this.slack.disconnect();
-}
-
 Headmaster.prototype.handleMessage = function(message) {
 
 	// Any logic to handle when a message comes in
@@ -162,11 +178,6 @@ Headmaster.prototype.routeMessage = function(dmChannel, user, message) {
 	}
 }
 
-
-Headmaster.prototype.getPlayers = function() {
-	this.players = [];
-}
-
 Headmaster.prototype.setNextUserDMHandler = function(user, cb) {
 	var handler = {
 		id: user.id,
@@ -176,15 +187,9 @@ Headmaster.prototype.setNextUserDMHandler = function(user, cb) {
 	this._nextUserDMHandlers.push(handler);
 }
 
-Headmaster.prototype.checkUserActive = function(user) {
-	// Checks if the user is an active player or not.
-
-	return false;
-}
-
-Headmaster.prototype.checkUserHandlerExists = function(user, removeOnFound) {
+Headmaster.prototype.checkUserHandlerExists = function(user, removeOnFind) {
 	// Checks if there's already a nextUserDMHandler for a user
-	// Removes the handler if removeOnFound is true
+	// Removes the handler if removeOnFind is true
 
 	var found = false;
 
@@ -192,7 +197,7 @@ Headmaster.prototype.checkUserHandlerExists = function(user, removeOnFound) {
 		if (this._nextUserDMHandlers[i].id == user.id) {
 			found = this._nextUserDMHandlers[i].cb;
 
-			if (removeOnFound) {
+			if (removeOnFind) {
 				this._nextUserDMHandlers.splice(this._nextUserDMHandlers.indexOf(found), 1);
 			}
 
@@ -213,69 +218,6 @@ Headmaster.prototype.getUsers = function(channel) {
 	return members;
 }
 
-// --------------
-// GitHub Issues
-// --------------
-
-Headmaster.prototype.getBlockingIssues = function() {
-	var deferred = Q.defer();
-
-	this.github_issues.list({
-		labels: "blocker"
-	}, function(err, data) {
-		if (err) {
-			deferred.reject(err);
-		} else {
-			deferred.resolve(data);
-		}
-	});
-
-	return deferred.promise;
-}
-
-Headmaster.prototype.getUnassignedVQAIssues = function() {
-	var deferred = Q.defer();
-
-	this.github_issues.list({
-		milestone: "VQA: Moment View",
-		assignee: "none",
-	}, function(err, data) {
-		if (err) {
-			deferred.reject(err);
-		} else {
-			deferred.resolve(data);
-		}
-	});
-
-	return deferred.promise;
-}
-
-Headmaster.prototype.formatIssue = function(issue) {
-	var assigned_to = "[" + issue['assignee']['login'] + "] ";
-	var name = "*" + issue['title'] + "* ";
-	var url = issue['html_url'];
-
-	return assigned_to + name + url;
-}
-
-Headmaster.prototype.sendBlockingIssues = function(channel) {
-	var _this = this;
-	this.getBlockingIssues()
-		.then(function(data) {
-			if (data.length == 0) {
-				channel.send("Looks like there are currently no open GitHub issues labeled as 'blocker'.");
-			} else {
-				channel.send("Here are the current GitHub issues labeled as 'blocker'!");
-				data.forEach(function(issue){
-					channel.send(_this.formatIssue(issue));
-				});
-			}
-		})
-		.fail(function(err) {
-			console.error(err);
-		});
-}
-
 // -------------
 // Cron
 // -------------
@@ -283,8 +225,12 @@ Headmaster.prototype.sendBlockingIssues = function(channel) {
 Headmaster.prototype.startCron = function() {
 	var _this = this;
 	var blockingTickets = schedule.scheduleJob('0 8,12,16,20,24 0 0 0', function() {
-		_this.sendBlockingIssues(_this.channel);
+		_this.modules.github.sendBlockingIssues(_this.channel);
 	});
+}
+
+Headmaster.prototype.shutdown = function() {
+	this.slack.disconnect();
 }
 
 module.exports = Headmaster;
