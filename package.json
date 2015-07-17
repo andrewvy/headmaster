@@ -1,7 +1,7 @@
 {
-  "name": "assassin-slack",
+  "name": "headmaster",
   "version": "1.0.0",
-  "description": "Assassin game for Slack using the Real-Time Message Protocol",
+  "description": "smarter slackbot",
   "main": "index.js",
   "dependencies": {
     "configurate": "",
@@ -12,6 +12,7 @@
     "slack-client": ""
   },
   "scripts": {
+    "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
