@@ -191,6 +191,7 @@ Headmaster.prototype.routeMessage = function(dmChannel, user, message, intent) {
 		handler(dmChannel, user, message);
 	} else {
 		var triggerWord = intent || message.split(" ")[0].toLowerCase();
+		if (!intent) dmChannel.send("NLP Module had low confidence, defaulting to dumb command match..");
 
 		if (this.commands[triggerWord]) {
 			this.commands[triggerWord](dmChannel, user, message);
