@@ -16,9 +16,7 @@ NaturalLanguage.prototype.getMessageIntent = function(message) {
 			if (err) deferred.reject(err);
 			if (res.outcomes.length == 0) deferred.reject();
 			if (res.outcomes[0].confidence < 0.5) deferred.reject();
-
-			var bestIntent = res.outcomes[0].intent;
-			deferred.resolve(bestIntent);
+			deferred.resolve(res.outcomes[0]);
 		}
 	);
 

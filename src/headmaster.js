@@ -165,15 +165,15 @@ Headmaster.prototype.handleMessage = function(message) {
 
 		if (dmChannel.is_im) {
 			// Use NLP module to discover message's intent
-			this.modules.nlp.getMessageIntent(text).then(function(intent) {
-				_this.routeMessage(dmChannel, user, text, intent);
+			this.modules.nlp.getMessageIntent(message.text).then(function(payload) {
+				_this.routeMessage(dmChannel, user, message.text, payload.intent, payload.entities);
 			}).fail(function() {
-				_this.routeMessage(dmChannel, user, text);
+				_this.routeMessage(dmChannel, user, message.text);
 			});
 		} else if (message.text.split(" ")[0].toLowerCase() == "headmaster") {
 			// Only use NLP when message starts with 'headmaster'
-			this.modules.nlp.getMessageIntent(text).then(function(intent) {
-				_this.routeMessage(dmChannel, user, text, intent);
+			this.modules.nlp.getMessageIntent(text).then(function(payload) {
+				_this.routeMessage(dmChannel, user, text, payload.intent, payload.entities);
 			}).fail(function() {
 				_this.routeMessage(dmChannel, user, text);
 			});
@@ -181,7 +181,7 @@ Headmaster.prototype.handleMessage = function(message) {
 	}
 }
 
-Headmaster.prototype.routeMessage = function(dmChannel, user, message, intent) {
+Headmaster.prototype.routeMessage = function(dmChannel, user, message, intent, entities) {
 	// Checks if there's a handler for this user
 	// If there's no current handler, pass it off to the right command handler
 
@@ -194,7 +194,7 @@ Headmaster.prototype.routeMessage = function(dmChannel, user, message, intent) {
 		if (!intent) dmChannel.send("NLP Module had low confidence, defaulting to dumb command match..");
 
 		if (this.commands[triggerWord]) {
-			this.commands[triggerWord](dmChannel, user, message);
+			this.commands[triggerWord](dmChannel, user, message, entities);
 		} else {
 			this.commands.default(dmChannel, user, message);
 		}

@@ -22,6 +22,26 @@ Github.prototype.sendBlockingIssues = function(channel) {
 		});
 }
 
+Github.prototype.sendIssuesWithLabels = function(channel, labels) {
+	var _this = this;
+	var labels = labels.join(',');
+
+	this.getIssuesWithLabel(labels)
+		.then(function(data) {
+			if (data.length == 0) {
+				channel.send("Looks like there are currently no open GitHub issues with the labels: " + labels);
+			} else {
+				channel.send("Here are the current GitHub issues labeled as: " + labels);
+				data.forEach(function(issue){
+					channel.send(_this.formatIssue(issue));
+				});
+			}
+		})
+		.fail(function(err) {
+			console.error(err);
+		});
+}
+
 // --------------------
 // GitHub API Methods
 // --------------------
@@ -31,6 +51,22 @@ Github.prototype.getBlockingIssues = function() {
 
 	this.Headmaster.github_issues.list({
 		labels: "blocker"
+	}, function(err, data) {
+		if (err) {
+			deferred.reject(err);
+		} else {
+			deferred.resolve(data);
+		}
+	});
+
+	return deferred.promise;
+}
+
+Github.prototype.getIssuesWithLabel = function(labels) {
+	var deferred = Q.defer();
+
+	this.Headmaster.github_issues.list({
+		labels: labels
 	}, function(err, data) {
 		if (err) {
 			deferred.reject(err);
