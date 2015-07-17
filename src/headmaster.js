@@ -151,11 +151,14 @@ Headmaster.prototype.handleMessage = function(message) {
 
 	// Any logic to handle when a message comes in
 
-	var dmChannel = this.slack.getDMByID(message.channel);
+	var dmChannel = this.slack.getChannelGroupOrDMByID(message.channel);
 	var user = this.slack.getUserByID(message.user);
 
 	if (dmChannel) {
-		this.routeMessage(dmChannel, user, message.text);
+		// Cool, channel exists.. but only respond if it's a DM channel
+		if (dmChannel.is_im) {
+			this.routeMessage(dmChannel, user, message.text);
+		}
 	}
 }
 
