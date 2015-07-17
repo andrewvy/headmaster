@@ -160,22 +160,21 @@ Headmaster.prototype.handleMessage = function(message) {
 
 	if (dmChannel && message.text) {
 		// Cool, channel exists.. but only respond if it's a DM channel
+		var text_array = message.text.split(' ');
+		var text = text_array.slice(1,text_array.length).join(' ');
+
 		if (dmChannel.is_im) {
 			// Use NLP module to discover message's intent
-			this.modules.nlp.getMessageIntent(message.text).then(function(intent) {
-				_this.routeMessage(dmChannel, user, message.text, intent);
+			this.modules.nlp.getMessageIntent(text).then(function(intent) {
+				_this.routeMessage(dmChannel, user, text, intent);
 			}).fail(function() {
-				var text_array = message.text.split(' ');
-				var text = text_array.slice(1,text_array.length).join(' ');
 				_this.routeMessage(dmChannel, user, text);
 			});
 		} else if (message.text.split(" ")[0].toLowerCase() == "headmaster") {
 			// Only use NLP when message starts with 'headmaster'
-			this.modules.nlp.getMessageIntent(message.text).then(function(intent) {
-				_this.routeMessage(dmChannel, user, message.text, intent);
+			this.modules.nlp.getMessageIntent(text).then(function(intent) {
+				_this.routeMessage(dmChannel, user, text, intent);
 			}).fail(function() {
-				var text_array = message.text.split(' ');
-				var text = text_array.slice(1,text_array.length).join(' ');
 				_this.routeMessage(dmChannel, user, text);
 			});
 		}
@@ -193,7 +192,6 @@ Headmaster.prototype.routeMessage = function(dmChannel, user, message, intent) {
 	} else {
 		var triggerWord = intent || message.split(" ")[0].toLowerCase();
 
-		console.log(triggerWord);
 		if (this.commands[triggerWord]) {
 			this.commands[triggerWord](dmChannel, user, message);
 		} else {
