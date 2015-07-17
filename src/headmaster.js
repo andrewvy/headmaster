@@ -6,10 +6,10 @@ var mongoose = require("mongoose");
 var promfig = require("promfig");
 var configurate = require("configurate");
 
-var Assassin = function() {
+var Headmaster = function() {
 	var _this = this;
 
-	var configFile = "config.js";
+	var configFile = __dirname + "/config.js";
 
 	var properties = {
 		slack_token: "Please enter your Slack Bot API Token: ",
@@ -22,14 +22,16 @@ var Assassin = function() {
 		configFile: configFile,
 		edit: edit
 	}, function (err, config, configPath) {
-		console.log(configPath);
+
+		console.log("Loading configuration file found at: " + configPath);
+
 		if (!config.slack_token) {
 			console.error("No slack_token specified in options.");
 		}
 
-		_this.mongo_uri = process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || "mongodb://localhost/assassin-slack";
+		_this.mongo_uri = process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || "mongodb://localhost/headmaster";
 		_this.slack_token = config.slack_token;
-		_this.slack_channel = config.slack_channel || "assassin-game";
+		_this.channel = null;
 
 		_this._nextUserDMHandlers = []
 
@@ -37,7 +39,7 @@ var Assassin = function() {
 		_this.commands = new Commands(_this);
 
 		// Connect to DB
-		// mongoose.connect(this.mongoUri);
+		mongoose.connect(_this.mongoUri);
 
 		// Connect to Slack, setup listeners, and join channel
 		_this.slack = new Slack(_this.slack_token, true, true);
@@ -48,7 +50,7 @@ var Assassin = function() {
 	});
 }
 
-Assassin.prototype.startListeners = function() {
+Headmaster.prototype.startListeners = function() {
 	var _this = this;
 
 	this.slack.on("open", function() {
@@ -62,41 +64,45 @@ Assassin.prototype.startListeners = function() {
 	this.slack.login();
 }
 
-Assassin.prototype.handleOpen = function() {
-	// Any logic to handle when first connecting to slack
-	// Joins the assassin-game slack channel
+Headmaster.prototype.handleOpen = function() {
+	var _this = this;
 
-	if (this.checkForChannel()) {
-		// this.getPlayers()
+	// Any logic to handle when first connecting to slack
+
+	this.channel = this.getChannel();
+
+	if (this.channel) {
+		_this.players = this.getUsers(channel);
+		console.log(_this.players);
 	} else {
 		console.error("Please create and invite the bot to the slack channel: #" + this.slack_channel);
 		this.shutdown();
 	}
 }
 
-Assassin.prototype.checkForChannel = function() {
+Headmaster.prototype.getChannel = function() {
 	var _this = this;
 	var is_member_channels = [];
-	var has_channel = false;
+	var channel = null;
 
 	Object.keys(this.slack.channels).forEach(function(key) {
 		if (_this.slack.channels[key].is_member == true) {
 			is_member_channels.push(_this.slack.channels[key]);
 
 			if (_this.slack.channels[key].name == _this.slack_channel) {
-				has_channel = true;
+				channel = _this.slack.channels[key];
 			}
 		}
 	});
 
-	return has_channel;
+	return channel;
 }
 
-Assassin.prototype.shutdown = function() {
+Headmaster.prototype.shutdown = function() {
 	this.slack.disconnect();
 }
 
-Assassin.prototype.handleMessage = function(message) {
+Headmaster.prototype.handleMessage = function(message) {
 
 	// Any logic to handle when a message comes in
 
@@ -108,7 +114,7 @@ Assassin.prototype.handleMessage = function(message) {
 	}
 }
 
-Assassin.prototype.routeMessage = function(dmChannel, user, message) {
+Headmaster.prototype.routeMessage = function(dmChannel, user, message) {
 	// Checks if there's a handler for this user
 	// If there's no current handler, pass it off to the right command handler
 
@@ -127,17 +133,17 @@ Assassin.prototype.routeMessage = function(dmChannel, user, message) {
 	}
 }
 
-Assassin.prototype.startCron = function() {
+Headmaster.prototype.startCron = function() {
 	// Start daily cron job to set daily targets
 }
 
-Assassin.prototype.getPlayers = function() {
+Headmaster.prototype.getPlayers = function() {
 	// Get currently active players from DB
 
 	this.players = [];
 }
 
-Assassin.prototype.setNextUserDMHandler = function(user, cb) {
+Headmaster.prototype.setNextUserDMHandler = function(user, cb) {
 	var handler = {
 		id: user.id,
 		cb: cb
@@ -146,13 +152,13 @@ Assassin.prototype.setNextUserDMHandler = function(user, cb) {
 	this._nextUserDMHandlers.push(handler);
 }
 
-Assassin.prototype.checkUserActive = function(user) {
+Headmaster.prototype.checkUserActive = function(user) {
 	// Checks if the user is an active player or not.
 
 	return false;
 }
 
-Assassin.prototype.checkUserHandlerExists = function(user, removeOnFound) {
+Headmaster.prototype.checkUserHandlerExists = function(user, removeOnFound) {
 	// Checks if there's already a nextUserDMHandler for a user
 	// Removes the handler if removeOnFound is true
 
@@ -173,4 +179,14 @@ Assassin.prototype.checkUserHandlerExists = function(user, removeOnFound) {
 	return found;
 }
 
-module.exports = Assassin;
+Headmaster.prototype.getUsers = function(channel) {
+	var _this = this;
+
+	var members = channel.members.map(function(user_id) {
+		return _this.slack.getUserByID(user_id);
+	});
+
+	return members;
+}
+
+module.exports = Headmaster;

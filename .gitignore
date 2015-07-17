@@ -1,4 +1,5 @@
 node_modules/
+src/config.js
 .DS_Store
 npm-debug.log
 main.js

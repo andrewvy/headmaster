@@ -1,5 +1,5 @@
-var Commands = function(Assassin) {
-	this.assassin = Assassin;
+var Commands = function(Headmaster) {
+	this.headmaster = Headmaster;
 }
 
 Commands.prototype.default = function(dmChannel, user, message) {

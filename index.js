@@ -1,2 +1,2 @@
-var Assassin = require("./src/assassin-slack");
-var assassin = new Assassin();
+var Headmaster = require("./src/headmaster");
+var headmaster = new Headmaster();
