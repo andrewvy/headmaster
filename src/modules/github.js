@@ -4,6 +4,28 @@ var Github = function(Headmaster) {
 	this.Headmaster = Headmaster;
 }
 
+Github.prototype.sendBlockingIssues = function(channel) {
+	var _this = this;
+	this.getBlockingIssues()
+		.then(function(data) {
+			if (data.length == 0) {
+				channel.send("Looks like there are currently no open GitHub issues labeled as 'blocker'.");
+			} else {
+				channel.send("Here are the current GitHub issues labeled as 'blocker'!");
+				data.forEach(function(issue){
+					channel.send(_this.formatIssue(issue));
+				});
+			}
+		})
+		.fail(function(err) {
+			console.error(err);
+		});
+}
+
+// --------------------
+// GitHub API Methods
+// --------------------
+
 Github.prototype.getBlockingIssues = function() {
 	var deferred = Q.defer();
 
@@ -43,24 +65,6 @@ Github.prototype.formatIssue = function(issue) {
 	var url = issue['html_url'];
 
 	return assigned_to + name + url;
-}
-
-Github.prototype.sendBlockingIssues = function(channel) {
-	var _this = this;
-	this.getBlockingIssues()
-		.then(function(data) {
-			if (data.length == 0) {
-				channel.send("Looks like there are currently no open GitHub issues labeled as 'blocker'.");
-			} else {
-				channel.send("Here are the current GitHub issues labeled as 'blocker'!");
-				data.forEach(function(issue){
-					channel.send(_this.formatIssue(issue));
-				});
-			}
-		})
-		.fail(function(err) {
-			console.error(err);
-		});
 }
 
 module.exports = Github;
