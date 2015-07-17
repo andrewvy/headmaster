@@ -10,7 +10,7 @@ Commands.prototype.default = function(dmChannel, user, message) {
 // GitHub
 // ------
 
-Commands.prototype.blockers = function(dmChannel, user, message) {
+Commands.prototype.get_blockers = function(dmChannel, user, message) {
 	this.Headmaster.modules.github.sendBlockingIssues(dmChannel);
 }
 

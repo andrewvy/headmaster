@@ -12,6 +12,7 @@ var Q = require('q');
 // Modules
 var Commands = require("./commands");
 var GithubModule = require("./modules/github");
+var NaturalLanguageModule = require("./modules/nlp");
 
 var Headmaster = function() {
 	var _this = this;
@@ -22,7 +23,8 @@ var Headmaster = function() {
 		github_username: "Please enter your GitHub username: ",
 		github_api_token: "Please enter your GitHub Personal Access Token: ",
 		github_organization_name: "Please enter in your main GitHub organization name: ",
-		github_repo: "Please enter in your main GitHub repo name: "
+		github_repo: "Please enter in your main GitHub repo name: ",
+		wit_api_token: "Please enter in your Wit.ai API token: "
 	};
 
 	var edit = promfig.bind(null, properties);
@@ -48,6 +50,7 @@ Headmaster.prototype.initialize = function(config, configPath) {
 		console.error("No slack_token specified in options.");
 	}
 
+	this.config = config;
 	this.mongoUri = process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || "mongodb://localhost/headmaster";
 	this.slack_token = config.slack_token;
 	this.channel = null;
@@ -85,6 +88,7 @@ Headmaster.prototype.initialize = function(config, configPath) {
 
 Headmaster.prototype.startModules = function() {
 	this.modules.github = new GithubModule(this);
+	this.modules.nlp = new NaturalLanguageModule(this);
 }
 
 Headmaster.prototype.startListeners = function() {
@@ -104,9 +108,11 @@ Headmaster.prototype.startListeners = function() {
 Headmaster.prototype.handleOpen = function() {
 	var _this = this;
 
+	console.log("unread messages: ", this.slack.getUnreadCount());
+
 	// Any logic to handle when first connecting to slack
 
-	this.channel = this.getGroup();
+	this.channel = this.getChannel() || this.getGroup();
 
 	if (this.channel) {
 	} else {
@@ -124,7 +130,7 @@ Headmaster.prototype.getChannel = function() {
 		if (_this.slack.channels[key].is_member == true) {
 			is_member_channels.push(_this.slack.channels[key]);
 
-			if (_this.slack.channels[key].name == _this.slack_channel) {
+			if (_this.slack.channels[key].name == _this.slack_group) {
 				channel = _this.slack.channels[key];
 			}
 		}
@@ -148,8 +154,8 @@ Headmaster.prototype.getGroup = function() {
 }
 
 Headmaster.prototype.handleMessage = function(message) {
-
 	// Any logic to handle when a message comes in
+	var _this = this;
 
 	var dmChannel = this.slack.getChannelGroupOrDMByID(message.channel);
 	var user = this.slack.getUserByID(message.user);
@@ -157,12 +163,20 @@ Headmaster.prototype.handleMessage = function(message) {
 	if (dmChannel) {
 		// Cool, channel exists.. but only respond if it's a DM channel
 		if (dmChannel.is_im) {
-			this.routeMessage(dmChannel, user, message.text);
+			// Use NLP module to discover message's intent
+			this.modules.nlp.getMessageIntent(message.text).then(function(intent) {
+				_this.routeMessage(dmChannel, user, message.text, intent);
+			});
+		} else if (message.text.split(" ")[0].toLowerCase() == "headmaster") {
+			// Only use NLP when message starts with 'headmaster'
+			this.modules.nlp.getMessageIntent(message.text).then(function(intent) {
+				_this.routeMessage(dmChannel, user, message.text, intent);
+			});
 		}
 	}
 }
 
-Headmaster.prototype.routeMessage = function(dmChannel, user, message) {
+Headmaster.prototype.routeMessage = function(dmChannel, user, message, intent) {
 	// Checks if there's a handler for this user
 	// If there's no current handler, pass it off to the right command handler
 
@@ -171,7 +185,7 @@ Headmaster.prototype.routeMessage = function(dmChannel, user, message) {
 	if (handler) {
 		handler(dmChannel, user, message);
 	} else {
-		var triggerWord = message.split(" ")[0].toLowerCase();
+		var triggerWord = intent || message.split(" ")[0].toLowerCase();
 
 		if (this.commands[triggerWord]) {
 			this.commands[triggerWord](dmChannel, user, message);
@@ -182,6 +196,9 @@ Headmaster.prototype.routeMessage = function(dmChannel, user, message) {
 }
 
 Headmaster.prototype.setNextUserDMHandler = function(user, cb) {
+	// Provides a callback on the next user's DM
+	// for simple context aware applications
+
 	var handler = {
 		id: user.id,
 		cb: cb
@@ -212,6 +229,8 @@ Headmaster.prototype.checkUserHandlerExists = function(user, removeOnFind) {
 }
 
 Headmaster.prototype.getUsers = function(channel) {
+	// Returns array of members of a channel
+
 	var _this = this;
 
 	var members = channel.members.map(function(user_id) {
