@@ -166,11 +166,17 @@ Headmaster.prototype.handleMessage = function(message) {
 			// Use NLP module to discover message's intent
 			this.modules.nlp.getMessageIntent(message.text).then(function(intent) {
 				_this.routeMessage(dmChannel, user, message.text, intent);
+			}).fail(function() {
+				var text = message.text.split(' ').slice(1,query.length).join(' ');
+				_this.routeMessage(dmChannel, user, text);
 			});
 		} else if (message.text.split(" ")[0].toLowerCase() == "headmaster") {
 			// Only use NLP when message starts with 'headmaster'
 			this.modules.nlp.getMessageIntent(message.text).then(function(intent) {
 				_this.routeMessage(dmChannel, user, message.text, intent);
+			}).fail(function() {
+				var text = message.text.split(' ').slice(1,query.length).join(' ');
+				_this.routeMessage(dmChannel, user, text);
 			});
 		}
 	}
