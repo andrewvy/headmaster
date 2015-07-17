@@ -3,7 +3,7 @@ var Commands = function(Headmaster) {
 }
 
 Commands.prototype.default = function(dmChannel, user, message) {
-	dmChannel.send("Sorry, I cannot give you that kind of information.");
+	dmChannel.send("Command not recognized, sorry!");
 }
 
 module.exports = Commands;

@@ -5,6 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "configurate": "",
+    "github": "^0.2.4",
     "node-schedule": "^0.2.9",
     "promfig": "",
     "q": "",

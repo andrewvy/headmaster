@@ -73,7 +73,7 @@ Headmaster.prototype.handleOpen = function() {
 	this.channel = this.getChannel();
 
 	if (this.channel) {
-
+		this.channel.send("I am the headmaster.");
 	} else {
 		console.error("Please create and invite the bot to the slack channel: #" + this.slack_channel);
 		this.shutdown();
