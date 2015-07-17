@@ -158,7 +158,7 @@ Headmaster.prototype.handleMessage = function(message) {
 	var dmChannel = this.slack.getChannelGroupOrDMByID(message.channel);
 	var user = this.slack.getUserByID(message.user);
 
-	if (dmChannel) {
+	if (dmChannel && message.text) {
 		// Cool, channel exists.. but only respond if it's a DM channel
 		if (dmChannel.is_im) {
 			// Use NLP module to discover message's intent
