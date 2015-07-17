@@ -4,13 +4,11 @@
   "description": "Assassin game for Slack using the Real-Time Message Protocol",
   "main": "index.js",
   "dependencies": {
-    "slack-client": "",
-    "q": "",
     "configurate": "",
-    "promfig": ""
-  },
-  "scripts": {
-    "start": "node index.js"
+    "node-schedule": "^0.2.9",
+    "promfig": "",
+    "q": "",
+    "slack-client": ""
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

@@ -5,6 +5,7 @@ var Commands = require("./commands");
 var mongoose = require("mongoose");
 var promfig = require("promfig");
 var configurate = require("configurate");
+var schedule = require('node-schedule');
 
 var Headmaster = function() {
 	var _this = this;
@@ -72,8 +73,7 @@ Headmaster.prototype.handleOpen = function() {
 	this.channel = this.getChannel();
 
 	if (this.channel) {
-		_this.players = this.getUsers(channel);
-		console.log(_this.players);
+
 	} else {
 		console.error("Please create and invite the bot to the slack channel: #" + this.slack_channel);
 		this.shutdown();
@@ -133,13 +133,8 @@ Headmaster.prototype.routeMessage = function(dmChannel, user, message) {
 	}
 }
 
-Headmaster.prototype.startCron = function() {
-	// Start daily cron job to set daily targets
-}
 
 Headmaster.prototype.getPlayers = function() {
-	// Get currently active players from DB
-
 	this.players = [];
 }
 
@@ -187,6 +182,12 @@ Headmaster.prototype.getUsers = function(channel) {
 	});
 
 	return members;
+}
+
+Headmaster.prototype.startCron = function() {
+	var blockingTickets = schedule.scheduleJob('0 8,12,16,20,24 0 0 0', function() {
+
+	});
 }
 
 module.exports = Headmaster;
