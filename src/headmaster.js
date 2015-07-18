@@ -6,7 +6,7 @@ var mongoose = require("mongoose");
 var promfig = require("promfig");
 var configurate = require("configurate");
 var schedule = require('node-schedule');
-var Github = require('github-api');
+var Github = require('github');
 var Q = require('q');
 
 // Modules
@@ -69,12 +69,13 @@ Headmaster.prototype.initialize = function(config, configPath) {
 
 	// Connect to GitHub, setup authorization
 	this.github_client = new Github({
-		token: config.github_api_token,
-		auth: "oauth"
+		version: "3.0.0"
 	});
 
-	this.github_repo = this.github_client.getRepo(config.github_organization_name, config.github_repo);
-	this.github_issues = this.github_client.getIssues(config.github_organization_name, config.github_repo);
+	this.github_client.authenticate({
+		type: "oauth",
+		token: this.config.github_api_token
+	});
 
 	// Initialize Modules
 	this.modules = {};
@@ -252,9 +253,9 @@ Headmaster.prototype.getUsers = function(channel) {
 
 Headmaster.prototype.startCron = function() {
 	var _this = this;
-	var blockingTickets = schedule.scheduleJob('0 8,12,16,20,24 0 0 0', function() {
-		_this.modules.github.sendBlockingIssues(_this.channel);
-	});
+//	var blockingTickets = schedule.scheduleJob('0 8,12,16,20,24 0 0 0', function() {
+//		_this.modules.github.sendBlockingIssues(_this.channel);
+//	});
 }
 
 Headmaster.prototype.shutdown = function() {

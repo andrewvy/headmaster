@@ -49,8 +49,10 @@ Github.prototype.sendIssuesWithLabels = function(channel, labels) {
 Github.prototype.getBlockingIssues = function() {
 	var deferred = Q.defer();
 
-	this.Headmaster.github_issues.list({
-		labels: "blocker"
+	this.Headmaster.github_client.issues.repoIssues({
+		labels: "blocker",
+		repo: this.Headmaster.config.github_repo,
+		user: this.Headmaster.config.github_organization_name
 	}, function(err, data) {
 		if (err) {
 			deferred.reject(err);
