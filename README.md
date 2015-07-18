@@ -19,4 +19,16 @@ sample src/config.js
 
 You can grab your Slack API token by creating a [new Bot Integration](https://slack.com/services/new/bot)  
 You'll also need a [GitHub Access Token](https://github.com/settings/tokens)  
-And a [Wit.ai Server Token](https://wit.ai/)
+And a [Wit.ai Server Token](https://wit.ai/) for NLP.
+
+# Wit.ai Intents and Entities
+
+`get_issues` - "Can you find me tickets with the label priority:high"
+
+ENTITY = `github_label`  
+`priority:high` = `github_label`  
+
+`create_issue` - "Can you create a ticket with the title 'This thing is broken'"
+
+ENTITY = `title`  
+`This thing is broken` = `title`
