@@ -36,7 +36,7 @@ Commands.prototype.get_box = function(channel, user, message, entities) {
 			_this.Headmaster.modules.ansible.getBranchFromBox(channel, user, instance.value);
 		});
 	} else {
-		channel.send(":cry: Sorry, I couldn't understand your message for server instances to look up.")
+		channel.send(":cry: Sorry, I didn't catch what server instance to look up.")
 	}
 }
 
