@@ -9,11 +9,15 @@ var schedule = require('node-schedule');
 var Github = require('github');
 var Q = require('q');
 
-// Modules
+// Internal
 var Commands = require("./commands");
+
+// Modules
+var MemoryModule = require("./modules/memory");
 var GithubModule = require("./modules/github");
 var NaturalLanguageModule = require("./modules/nlp");
 
+// Headmaster
 var Headmaster = function() {
 	var _this = this;
 
@@ -88,6 +92,7 @@ Headmaster.prototype.initialize = function(config, configPath) {
 }
 
 Headmaster.prototype.startModules = function() {
+	this.modules.memory = new MemoryModule(this);
 	this.modules.github = new GithubModule(this);
 	this.modules.nlp = new NaturalLanguageModule(this);
 }

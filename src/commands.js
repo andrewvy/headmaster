@@ -2,19 +2,26 @@ var Commands = function(Headmaster) {
 	this.Headmaster = Headmaster;
 }
 
-Commands.prototype.default = function(dmChannel, user, message) {
-	dmChannel.send("Command not recognized, sorry!");
+Commands.prototype.default = function(channel, user, message) {
+	channel.send("Command not recognized, sorry!");
+}
+
+// ------
+// Memory
+// ------
+
+Commands.prototype.last_message = function(channel, user, message, entities) {
 }
 
 // ------
 // GitHub
 // ------
 
-Commands.prototype.get_blockers = function(dmChannel, user, message) {
-	this.Headmaster.modules.github.sendBlockingIssues(dmChannel);
+Commands.prototype.get_blockers = function(channel, user, message) {
+	this.Headmaster.modules.github.sendBlockingIssues(channel);
 }
 
-Commands.prototype.get_issues = function(dmChannel, user, message, entities) {
+Commands.prototype.get_issues = function(channel, user, message, entities) {
 	if (!entities) return
 
 	var labels = entities.github_labels;
@@ -25,10 +32,17 @@ Commands.prototype.get_issues = function(dmChannel, user, message, entities) {
 			label_values.push(label.value);
 		})
 
-		this.Headmaster.modules.github.sendIssuesWithLabels(dmChannel, label_values);
+		this.Headmaster.modules.github.sendIssuesWithLabels(channel, label_values);
 	} else {
 		return
 	}
+}
+
+Commands.prototype.create_issue = function(channel, user, message, entities) {
+	if (!entities) return
+	if (!entities.title[0]) return
+
+	this.Headmaster.modules.github.createTicket(channel, entities.title[0].value)
 }
 
 Commands.prototype.blockers = Commands.prototype.get_blockers;

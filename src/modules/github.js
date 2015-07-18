@@ -46,6 +46,18 @@ Github.prototype.sendIssuesWithLabels = function(channel, labels) {
 // GitHub API Methods
 // --------------------
 
+Github.prototype.createTicket = function(dmChannel, title) {
+	this.Headmaster.github_client.issues.create({
+		repo: this.Headmaster.config.github_repo,
+		user: this.Headmaster.config.github_organization_name,
+		title: title
+	}, function(err, data) {
+		if (err) dmChannel.send("Error creating your ticket, sorry!");
+
+		dmChannel.send("Created your ticket! Here's a link: " + data.html_url);
+	});
+}
+
 Github.prototype.getBlockingIssues = function() {
 	var deferred = Q.defer();
 
