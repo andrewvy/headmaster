@@ -15,6 +15,7 @@ var Commands = require("./commands");
 // Modules
 var MemoryModule = require("./modules/memory");
 var GithubModule = require("./modules/github");
+var AnsibleModule = require("./modules/ansible");
 var NaturalLanguageModule = require("./modules/nlp");
 
 // Headmaster
@@ -28,7 +29,10 @@ var Headmaster = function() {
 		github_api_token: "Please enter your GitHub Personal Access Token: ",
 		github_organization_name: "Please enter in your main GitHub organization name: ",
 		github_repo: "Please enter in your main GitHub repo name: ",
-		wit_api_token: "Please enter in your Wit.ai API token: "
+		wit_api_token: "Please enter in your Wit.ai API token: ",
+		ansible_username: "Please enter in your Ansible username: ",
+		ansible_password: "Please enter in your Ansible password: ",
+		ansible_url: "Please enter in your Ansible Tower hostname: "
 	};
 
 	var edit = promfig.bind(null, properties);
@@ -95,6 +99,7 @@ Headmaster.prototype.startModules = function() {
 	this.modules.memory = new MemoryModule(this);
 	this.modules.github = new GithubModule(this);
 	this.modules.nlp = new NaturalLanguageModule(this);
+	this.modules.ansible = new AnsibleModule(this);
 }
 
 Headmaster.prototype.startListeners = function() {
@@ -173,14 +178,14 @@ Headmaster.prototype.handleMessage = function(message) {
 			// Use NLP module to discover message's intent
 			this.modules.nlp.getMessageIntent(message.text).then(function(payload) {
 				_this.routeMessage(dmChannel, user, message.text, payload.intent, payload.entities);
-			}).fail(function() {
+			}, function() {
 				_this.routeMessage(dmChannel, user, message.text);
 			});
 		} else if (message.text.split(" ")[0].toLowerCase() == "headmaster") {
 			// Only use NLP when message starts with 'headmaster'
 			this.modules.nlp.getMessageIntent(text).then(function(payload) {
 				_this.routeMessage(dmChannel, user, text, payload.intent, payload.entities);
-			}).fail(function() {
+			}, function() {
 				_this.routeMessage(dmChannel, user, text);
 			});
 		}
@@ -191,13 +196,13 @@ Headmaster.prototype.routeMessage = function(dmChannel, user, message, intent, e
 	// Checks if there's a handler for this user
 	// If there's no current handler, pass it off to the right command handler
 
+	console.log(user.name + ": " + message);
 	var handler = this.checkUserHandlerExists(user, true);
 
 	if (handler) {
 		handler(dmChannel, user, message);
 	} else {
 		var triggerWord = intent || message.split(" ")[0].toLowerCase();
-		if (!intent) dmChannel.send("NLP Module had low confidence, defaulting to dumb command match..");
 
 		if (this.commands[triggerWord]) {
 			this.commands[triggerWord](dmChannel, user, message, entities);

@@ -20,6 +20,27 @@ Commands.prototype.last_message = function(channel, user, message, entities) {
 }
 
 // ------
+// Ansible
+// ------
+
+Commands.prototype.get_box = function(channel, user, message, entities) {
+	if (!entities) return
+
+	var _this = this;
+	var instances = entities.server_instance;
+
+	if (instances.length) {
+		channel.send("Getting current information on boxes.. :loading:");
+
+		instances.forEach(function(instance) {
+			_this.Headmaster.modules.ansible.getBranchFromBox(channel, user, instance.value);
+		});
+	} else {
+		channel.send(":cry: Sorry, I couldn't understand your message for server instances to look up.")
+	}
+}
+
+// ------
 // GitHub
 // ------
 
