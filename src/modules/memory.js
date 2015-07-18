@@ -10,13 +10,28 @@ var Memory = function(Headmaster) {
 	this.Headmaster = Headmaster;
 }
 
-Memory.prototype.recallLastMessage = function(channel, user) {
+Memory.prototype.getHistory = function(channel) {
+	if (!channel) return
+
 	var historyArray = _.toArray(channel._history);
-	historyArray = historyArray.slice(0, historyArray.length-1);
-	var lastMessage = _.findLast(historyArray, { user: user.id } );
+	var filteredHistory = this.filterHistory(historyArray);
+
+	return filteredHistory;
+}
+
+Memory.prototype.filterHistory = function(history) {
+	// Slice out the last message that invoked Headmaster
+
+	return history.slice(0, history.length-1);
+}
+
+Memory.prototype.recallLastMessage = function(channel, user) {
+	if (!channel) return
+
+	var history = this.getHistory(channel);
+	var lastMessage = _.findLast(history, { user: user.id } );
 
 	if (!lastMessage) return null
-
 	return lastMessage;
 }
 

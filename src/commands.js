@@ -11,6 +11,12 @@ Commands.prototype.default = function(channel, user, message) {
 // ------
 
 Commands.prototype.last_message = function(channel, user, message, entities) {
+	var message = this.Headmaster.modules.memory.recallLastMessage(channel, user);
+	if (message) {
+		channel.send(message.text);
+	} else {
+		channel.send("I couldn't remember the last thing said.");
+	}
 }
 
 // ------
