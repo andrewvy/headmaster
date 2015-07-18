@@ -1,6 +1,20 @@
 # Headmaster
 
-He's here to help you manage.
+Slack bot on RTMP with [Wit.ai NLP](https://wit.ai).  
+He's here to help you manage. GitHub functionality included.
+
+# Example
+
+```
+[12:04 PM] vy: find tickets with labels priority:high
+[12:04 PM] headmasterBOT: Here are the current GitHub issues labeled as: priority:high
+[12:04 PM] headmasterBOT: [vy] *Testing Priority High 1* https://github.com/andrewvy/headmaster/issues/1
+[12:04 PM] headmasterBOT: [vy] *Testing Priority High 2* https://github.com/andrewvy/headmaster/issues/2
+[12:04 PM] headmasterBOT: [vy] *Testing Priority High 3* https://github.com/andrewvy/headmaster/issues/3
+
+[5:40 PM] vy: create a ticket with the title "Testing!"
+[5:40 PM] headmasterBOT: Created your ticket! Here's a link: https://github.com/andrewvy/headmaster/issues/4
+```
 
 # Setup
 
