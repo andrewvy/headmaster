@@ -113,6 +113,10 @@ Headmaster.prototype.startListeners = function() {
 		_this.handleMessage(message);
 	});
 
+	this.slack.on("close", function() {
+		this.slack.reconnect();
+	});
+
 	this.slack.login();
 }
 
