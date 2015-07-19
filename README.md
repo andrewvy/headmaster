@@ -3,6 +3,8 @@
 Slack bot on RTMP with [Wit.ai NLP](https://wit.ai).  
 He's here to help you manage. GitHub functionality included.
 
+Uses [Octosync](https://github.com/andrewvy/octosync) for real-time github issues storage.
+
 # Example
 
 ```
