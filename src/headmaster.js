@@ -114,7 +114,7 @@ Headmaster.prototype.startListeners = function() {
 	});
 
 	this.slack.on("close", function() {
-		this.slack.reconnect();
+		_this.slack.reconnect();
 	});
 
 	this.slack.login();
