@@ -19,7 +19,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/andrewvy/assassin-slack.git"
+    "url": "git+https://github.com/andrewvy/headmaster.git"
   },
   "keywords": [
     "assassin"
@@ -27,7 +27,7 @@
   "author": "Andrew Vy",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/andrewvy/assassin-slack/issues"
+    "url": "https://github.com/andrewvy/headmaster/issues"
   },
-  "homepage": "https://github.com/andrewvy/assassin-slack#readme"
+  "homepage": "https://github.com/andrewvy/headmaster#readme"
 }
